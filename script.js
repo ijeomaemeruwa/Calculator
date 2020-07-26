@@ -1,35 +1,97 @@
-let total = 0; // for storing typed values
-let buffer = "0"; // to keep values as strings
-let previousOperator; // represents previous operator clicked
+let runningTotal = 0;
+let buffer = "0";
+let previousOperator;
+const screen = document.querySelector(".screen");
 
-const screen = document.querySelector('.screen');
-const values = document.querySelector('.calc-buttons');
-
-
-
-loadEventListeners();
-
-function loadEventListeners() {
-
-    values.addEventListener('click', function(e) {
-        returnOutput(e.target.innerText);
-    });
-
-
-}
-
-
-
-
-//define event listeners functions
-
-function returnOutput(value) {
-  if (isNaN(value)) {
-      symbols(value)
+function buttonClick(value) {
+  if (isNaN(parseInt(value))) {
+    handleSymbol(value);
   } else {
-     numbers(value) 
-  } 
+    handleNumber(value);
+  }
+  rerender();
 }
 
-function symbols();
-function numbers();
+function handleNumber(value) {
+  if (buffer === "0") {
+    buffer = value;
+  } else {
+    buffer += value;
+  }
+}
+
+function handleMath(value) {
+  if (buffer === "0") {
+    // do nothing
+    return;
+  }
+
+  const intBuffer = parseInt(buffer);
+  if (runningTotal === 0) {
+    runningTotal = intBuffer;
+  } else {
+    flushOperation(intBuffer);
+  }
+
+  previousOperator = value;
+
+  buffer = "0";
+}
+
+function flushOperation(intBuffer) {
+  if (previousOperator === "+") {
+    runningTotal += intBuffer;
+  } else if (previousOperator === "-") {
+    runningTotal -= intBuffer;
+  } else if (previousOperator === "×") {
+    runningTotal *= intBuffer;
+  } else {
+    runningTotal /= intBuffer;
+  }
+}
+
+function handleSymbol(value) {
+  switch (value) {
+    case "C":
+      buffer = "0";
+      runningTotal = 0;
+      break;
+    case "=":
+      if (previousOperator === null) {
+        // need two numbers to do math
+        return;
+      }
+      flushOperation(parseInt(buffer));
+      previousOperator = null;
+      buffer = +runningTotal;
+      runningTotal = 0;
+      break;
+    case "←":
+      if (buffer.length === 1) {
+        buffer = "0";
+      } else {
+        buffer = buffer.substring(0, buffer.length - 1);
+      }
+      break;
+    case "+":
+    case "-":
+    case "×":
+    case "÷":
+      handleMath(value);
+      break;
+  }
+}
+
+function rerender() {
+  screen.innerText = buffer;
+}
+
+function init() {
+  document
+    .querySelector(".calc-buttons")
+    .addEventListener("click", function(event) {
+      buttonClick(event.target.innerText);
+    });
+}
+
+init();
